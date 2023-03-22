@@ -1,0 +1,64 @@
+class Element
+{
+    public int X;
+    public int Y;
+    public char Graphic = '0';
+}
+
+class Units : Element
+{
+    public bool Charge = true;
+    public int Power;
+    public Units(Cursor coordinates, int power_value, string units_type, World map)
+    {
+        map.Units_map[coordinates.X, coordinates.Y].Power = power_value;
+        map.Units_map[coordinates.X, coordinates.Y].Graphic = units_type[0];
+    }
+}
+
+class Cursor : Element
+{
+    public Cursor()
+    {
+        X = 0;
+        Y = 0;
+    }
+}
+class Terra_point : Element
+{
+    public Terra_point(int x_start, int y_start, int x_size, int y_size, int spawning_change, string terra_type, World map)
+    {
+        map.Terra[x_start, y_start].Graphic = terra_type[0];
+        Random rundom = new Random();
+        if(x_start > 0 && map.Terra[x_start - 1, y_start].Graphic == '0' && rundom.Next() % 100 < spawning_change)
+        {
+            new Terra_point(x_start - 1, y_start, x_size, y_size, spawning_change, terra_type, map);
+        }
+        if (y_start > 0 && map.Terra[x_start, y_start - 1].Graphic == '0' && rundom.Next() % 100 < spawning_change)
+        {
+            new Terra_point(x_start, y_start - 1, x_size, y_size, spawning_change, terra_type, map);
+        }
+        if (y_start < y_size - 1 && map.Terra[x_start, y_start + 1].Graphic == '0' && rundom.Next() < spawning_change)
+        {
+            new Terra_point(x_start, y_start + 1, x_size, y_size, spawning_change, terra_type, map);
+        }
+        if (x_start < x_size - 1 && map.Terra[x_start + 1, y_start].Graphic == '0' && rundom.Next() < spawning_change)
+        {
+            new Terra_point(x_start + 1, y_start, x_size, y_size, spawning_change, terra_type, map);
+        }
+    }
+}
+
+class World
+{
+    public Element [,] Terra;
+    public Units[,] Units_map;
+    public World() : this(30, 20) 
+    { }
+    public World(int X, int Y)
+    {
+        Terra = new Element[X, Y];
+        Units_map = new Units[X, Y];
+    }
+
+}
