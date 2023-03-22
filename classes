@@ -51,13 +51,15 @@ class Terra_point : Element
 
 class World
 {
-    public Element [,] Terra;
+    public Element[,] Countries;
+    public Terra_point [,] Terra;
     public Units[,] Units_map;
     public World() : this(30, 20) 
     { }
     public World(int X, int Y)
     {
-        Terra = new Element[X, Y];
+        Countries = new Element[X, Y];
+        Terra = new Terra_point[X, Y];
         Units_map = new Units[X, Y];
     }
 
