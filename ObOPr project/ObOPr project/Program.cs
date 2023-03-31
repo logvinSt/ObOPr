@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 Engine engine = new Engine();
-engine.Player_Move();
+engine.PlayerMove();
 
-enum Type_decoder
+enum TypeDecoder
 {
     CURSORE = 1,
     CASTLE = 101,
@@ -17,7 +17,7 @@ enum Type_decoder
     WATER = 202,
     MOUNTAINS = 203,
 
-    VOID_LAND = 500,
+    VOID_LAND = 0,
 
     PLAYER_LAND_1 = 701,
     PLAYER_LAND_2 = 702,
@@ -32,43 +32,43 @@ enum Type_decoder
 
 class Type
 {
-    public SortedDictionary<Type_decoder, Tuple<char, ConsoleColor>> Types;
+    public SortedDictionary<TypeDecoder, Tuple<char, ConsoleColor>> Types;
 
     public Type()
     {
-        this.Types = new SortedDictionary<Type_decoder, Tuple<char, ConsoleColor>>();
+        this.Types = new SortedDictionary<TypeDecoder, Tuple<char, ConsoleColor>>();
 
-        Types.Add(Type_decoder.CURSORE,  new Tuple<char, ConsoleColor>('@', ConsoleColor.DarkYellow));
+        Types.Add(TypeDecoder.CURSORE,  new Tuple<char, ConsoleColor>('@', ConsoleColor.DarkYellow));
 
-        Types.Add(Type_decoder.CASTLE, new Tuple<char, ConsoleColor>('C', ConsoleColor.DarkGray));
+        Types.Add(TypeDecoder.CASTLE, new Tuple<char, ConsoleColor>('C', ConsoleColor.DarkGray));
 
-        Types.Add(Type_decoder.PORT, new Tuple<char, ConsoleColor>('P', ConsoleColor.DarkGray));
+        Types.Add(TypeDecoder.PORT, new Tuple<char, ConsoleColor>('P', ConsoleColor.DarkGray));
 
-        Types.Add(Type_decoder.WARRIORS, new Tuple<char, ConsoleColor>('w', ConsoleColor.DarkRed));
+        Types.Add(TypeDecoder.WARRIORS, new Tuple<char, ConsoleColor>('w', ConsoleColor.DarkRed));
 
-        Types.Add(Type_decoder.SHIELDERS, new Tuple<char, ConsoleColor>('s', ConsoleColor.DarkRed));
+        Types.Add(TypeDecoder.SHIELDERS, new Tuple<char, ConsoleColor>('s', ConsoleColor.DarkRed));
 
-        Types.Add(Type_decoder.ARCHERS, new Tuple<char, ConsoleColor>('a', ConsoleColor.DarkRed));
+        Types.Add(TypeDecoder.ARCHERS, new Tuple<char, ConsoleColor>('a', ConsoleColor.DarkRed));
 
-        Types.Add(Type_decoder.SHIPS, new Tuple<char, ConsoleColor>('S', ConsoleColor.DarkRed));
+        Types.Add(TypeDecoder.SHIPS, new Tuple<char, ConsoleColor>('S', ConsoleColor.DarkRed));
 
-        Types.Add(Type_decoder.FOREST, new Tuple<char, ConsoleColor>('F', ConsoleColor.Green));
+        Types.Add(TypeDecoder.FOREST, new Tuple<char, ConsoleColor>('F', ConsoleColor.Green));
 
-        Types.Add(Type_decoder.WATER, new Tuple<char, ConsoleColor>('W', ConsoleColor.Blue));
+        Types.Add(TypeDecoder.WATER, new Tuple<char, ConsoleColor>('W', ConsoleColor.Blue));
 
-        Types.Add(Type_decoder.MOUNTAINS, new Tuple<char, ConsoleColor>('M', ConsoleColor.DarkGreen));
+        Types.Add(TypeDecoder.MOUNTAINS, new Tuple<char, ConsoleColor>('M', ConsoleColor.DarkGreen));
 
-        Types.Add(Type_decoder.VOID_LAND, new Tuple<char, ConsoleColor>('0', ConsoleColor.Black));
+        Types.Add(TypeDecoder.VOID_LAND, new Tuple<char, ConsoleColor>('0', ConsoleColor.Black));
 
-        Types.Add(Type_decoder.PLAYER_LAND_1, new Tuple<char, ConsoleColor>('1', ConsoleColor.DarkBlue));
-        Types.Add(Type_decoder.PLAYER_LAND_2, new Tuple<char, ConsoleColor>('2', ConsoleColor.DarkMagenta));
-        Types.Add(Type_decoder.PLAYER_LAND_3, new Tuple<char, ConsoleColor>('3', ConsoleColor.DarkCyan));
-        Types.Add(Type_decoder.PLAYER_LAND_4, new Tuple<char, ConsoleColor>('4', ConsoleColor.Magenta));
-        Types.Add(Type_decoder.PLAYER_LAND_5, new Tuple<char, ConsoleColor>('5', ConsoleColor.Red));
-        Types.Add(Type_decoder.PLAYER_LAND_6, new Tuple<char, ConsoleColor>('6', ConsoleColor.Yellow));
-        Types.Add(Type_decoder.PLAYER_LAND_7, new Tuple<char, ConsoleColor>('7', ConsoleColor.Cyan));
-        Types.Add(Type_decoder.PLAYER_LAND_8, new Tuple<char, ConsoleColor>('8', ConsoleColor.Black));
-        Types.Add(Type_decoder.PLAYER_LAND_9, new Tuple<char, ConsoleColor>('9', ConsoleColor.White));
+        Types.Add(TypeDecoder.PLAYER_LAND_1, new Tuple<char, ConsoleColor>('1', ConsoleColor.DarkBlue));
+        Types.Add(TypeDecoder.PLAYER_LAND_2, new Tuple<char, ConsoleColor>('2', ConsoleColor.DarkMagenta));
+        Types.Add(TypeDecoder.PLAYER_LAND_3, new Tuple<char, ConsoleColor>('3', ConsoleColor.DarkCyan));
+        Types.Add(TypeDecoder.PLAYER_LAND_4, new Tuple<char, ConsoleColor>('4', ConsoleColor.Magenta));
+        Types.Add(TypeDecoder.PLAYER_LAND_5, new Tuple<char, ConsoleColor>('5', ConsoleColor.Red));
+        Types.Add(TypeDecoder.PLAYER_LAND_6, new Tuple<char, ConsoleColor>('6', ConsoleColor.Yellow));
+        Types.Add(TypeDecoder.PLAYER_LAND_7, new Tuple<char, ConsoleColor>('7', ConsoleColor.Cyan));
+        Types.Add(TypeDecoder.PLAYER_LAND_8, new Tuple<char, ConsoleColor>('8', ConsoleColor.Black));
+        Types.Add(TypeDecoder.PLAYER_LAND_9, new Tuple<char, ConsoleColor>('9', ConsoleColor.White));
     }
 }
 
@@ -76,39 +76,39 @@ class Element
 {
     public int X;
     public int Y;
-    public int Element_type;
+    public int ElementType;
     
     public Element()
     {
-        Element_type = 500;
+        ElementType = 0;
     }
 
-    public static Type Type_map = new Type(); 
+    public static Type TypeMap = new Type(); 
 }
 
 class Units : Element
 {
     public bool Charge = true;
     public int Power;
-    public int Their_country;
+    public int TheirCountry;
     public Units()
     {
-        Element_type = 500;
+        ElementType = 0;
     }
     public Units(ref Cursor coordinates, int power_value, int units_type, ref World map)
     {
-        map.Units_map[coordinates.X, coordinates.Y].Power = power_value;
-        map.Units_map[coordinates.X, coordinates.Y].Element_type = units_type;
-        map.Units_map[coordinates.X, coordinates.Y].Their_country = map.Countries_Land[coordinates.X, coordinates.Y].Element_type;
+        map.UnitsMap[coordinates.X, coordinates.Y].Power = power_value;
+        map.UnitsMap[coordinates.X, coordinates.Y].ElementType = units_type;
+        map.UnitsMap[coordinates.X, coordinates.Y].TheirCountry = map.CountriesLand[coordinates.X, coordinates.Y].ElementType;
     }
 }
 
 class Country
 {
-    public int Number_Castles;
+    public int NumberCastles;
     public Country()
     {
-        this.Number_Castles = 1;
+        this.NumberCastles = 1;
     }
 }
 
@@ -116,71 +116,71 @@ class Cursor : Element
 {
     public Cursor()
     {
-        this.Element_type = 1;
+        this.ElementType = 1;
         this.X = 0;
         this.Y = 0;
     }
 }
 
-class Terra_point : Element
+class TerraPoint : Element
 {
-    public Terra_point()
+    public TerraPoint()
     {
-        this.Element_type = 500;
+        this.ElementType = 0;
     }
-    public Terra_point(int x_start, int y_start, int x_size, int y_size, int spawning_change, int terra_type, ref Terra_point[,] map)
+    public TerraPoint(int x_start, int y_start, int x_size, int y_size, int spawning_change, int terra_type, ref TerraPoint[,] map)
     {
-        map[x_start, y_start].Element_type = terra_type;
+        map[x_start, y_start].ElementType = terra_type;
         Random rundom = new Random();
-        if(x_start > 0 && map[x_start - 1, y_start].Element_type == 500 && rundom.Next(0, 99) < spawning_change)
+        if(x_start > 0 && map[x_start - 1, y_start].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
         {
-            new Terra_point(x_start - 1, y_start, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start - 1, y_start, x_size, y_size, spawning_change, terra_type, ref map);
         }
-        if (y_start > 0 && map[x_start, y_start - 1].Element_type == 500 && rundom.Next(0, 99) < spawning_change)
+        if (y_start > 0 && map[x_start, y_start - 1].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
         {
-            new Terra_point(x_start, y_start - 1, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start, y_start - 1, x_size, y_size, spawning_change, terra_type, ref map);
         }
-        if (y_start < y_size - 1 && map[x_start, y_start + 1].Element_type == 500 && rundom.Next(0, 99) < spawning_change)
+        if (y_start < y_size - 1 && map[x_start, y_start + 1].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
         {
-            new Terra_point(x_start, y_start + 1, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start, y_start + 1, x_size, y_size, spawning_change, terra_type, ref map);
         }
-        if (x_start < x_size - 1 && map[x_start + 1, y_start].Element_type == 500 && rundom.Next(0, 99) < spawning_change)
+        if (x_start < x_size - 1 && map[x_start + 1, y_start].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
         {
-            new Terra_point(x_start + 1, y_start, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start + 1, y_start, x_size, y_size, spawning_change, terra_type, ref map);
         }
     }
 }
 
 class World
 {
-    public Element[,] Countries_Land;
-    public Terra_point [,] Terra;
-    public Units[,] Units_map;
+    public Element[,] CountriesLand;
+    public TerraPoint [,] Terra;
+    public Units[,] UnitsMap;
     public Country[] Countries;
-    public int X_size;
-    public int Y_size;
+    public int XSize;
+    public int YSize;
 
-    public World(int X, int Y, int Countries_quantity)
+    public World(int X, int Y, int CountriesQuantity)
     {
-        this.X_size = X;
-        this.Y_size = Y;
-        this.Countries_Land = new Element[X, Y];
-        this.Terra = new Terra_point[X, Y];
-        this.Units_map = new Units[X, Y];
-        this.Countries = new Country[Countries_quantity];
+        this.XSize = X;
+        this.YSize = Y;
+        this.CountriesLand = new Element[X, Y];
+        this.Terra = new TerraPoint[X, Y];
+        this.UnitsMap = new Units[X, Y];
+        this.Countries = new Country[CountriesQuantity];
 
-        for (int y = 0; y < this.Y_size; y++)
+        for (int y = 0; y < this.YSize; y++)
         {
-            for (int x = 0; x < this.X_size; x++)
+            for (int x = 0; x < this.XSize; x++)
             {
-                this.Countries_Land[x, y] = new Element();
-                this.Terra[x, y] = new Terra_point();
-                this.Units_map[x, y] = new Units();
+                this.CountriesLand[x, y] = new Element();
+                this.Terra[x, y] = new TerraPoint();
+                this.UnitsMap[x, y] = new Units();
             }
         }
 
 
-        Spawn_countries(Countries_quantity);
+        Spawn_countries(CountriesQuantity);
 
         Spawn_terra(40, 201);
 
@@ -190,48 +190,48 @@ class World
 
     }
 
-    private void Spawn_countries(int Countries_quantity)
+    private void Spawn_countries(int CountriesQuantity)
     {
-        Random random_coordinates = new Random();
-        int X_random;
-        int Y_random;
+        Random randomCoordinates = new Random();
+        int XRandom;
+        int YRandom;
 
-        for (int spawned_countries = 1; spawned_countries <= Countries_quantity; spawned_countries++)
+        for (int spawnedCountries = 1; spawnedCountries <= CountriesQuantity; spawnedCountries++)
         {
-            Countries[spawned_countries - 1] = new Country();
-            X_random = random_coordinates.Next(1, X_size - 1);
-            Y_random = random_coordinates.Next(1, Y_size - 1);
-            Units_map[X_random, Y_random].Element_type = (int)Type_decoder.CASTLE;
+            Countries[spawnedCountries - 1] = new Country();
+            XRandom = randomCoordinates.Next(1, XSize - 1);
+            YRandom = randomCoordinates.Next(1, YSize - 1);
+            UnitsMap[XRandom, YRandom].ElementType = (int)TypeDecoder.CASTLE;
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    this.Countries_Land[X_random - 1 + i, Y_random - 1 + j].Element_type = spawned_countries + 700;
-                    this.Terra[X_random - 1 + i, Y_random - 1 + j].Element_type = spawned_countries + 700;
+                    this.CountriesLand[XRandom - 1 + i, YRandom - 1 + j].ElementType = spawnedCountries + 700;
+                    this.Terra[XRandom - 1 + i, YRandom - 1 + j].ElementType = spawnedCountries + 700;
                 }
             }
         }
     }
 
-    private void Spawn_terra(int Spawn_change, int Terra_type)
+    private void Spawn_terra(int SpawnChange, int TerraType)
     {
-        for (int spawn_dotes = 0; spawn_dotes <= X_size / 10 || spawn_dotes < Y_size / 10; spawn_dotes++)
+        for (int spawnDotes = 0; spawnDotes <= XSize / 10 || spawnDotes < YSize / 10; spawnDotes++)
         {
-            Random random_coordinates = new Random();
-            int X_random;
-            int Y_random;
+            Random randomCoordinates = new Random();
+            int XRandom;
+            int YRandom;
 
-            int spawn_tries = 0;
+            int spawnTries = 0;
             do
             {
-                X_random = random_coordinates.Next(0, X_size);
-                Y_random = random_coordinates.Next(0, Y_size);
-                spawn_tries++;
+                XRandom = randomCoordinates.Next(0, XSize);
+                YRandom = randomCoordinates.Next(0, YSize);
+                spawnTries++;
             }
-            while (this.Terra[X_random, Y_random].Element_type != 500 && spawn_tries < 10000);
-            if (spawn_tries < 10000)
+            while (this.Terra[XRandom, YRandom].ElementType != 0 && spawnTries < 10000);
+            if (spawnTries < 10000)
             {
-                Terra_point Spawn_terra_type = new Terra_point(X_random, Y_random, X_size, Y_size, Spawn_change, Terra_type, ref this.Terra);
+                TerraPoint Spawn_terra_type = new TerraPoint(XRandom, YRandom, XSize, YSize, SpawnChange, TerraType, ref this.Terra);
             }
         }
     }
@@ -240,47 +240,47 @@ class World
 
 class Drawing
 {
-    public static void Draw_map(ref World Map, ref Cursor Cursore)
+    public static void DrawMap(ref World Map, ref Cursor Player)
     {
         Console.Clear();
-        for(int y = 0; y < Map.Y_size; y++)
+        for(int y = 0; y < Map.YSize; y++)
         {
-            for (int x = 0; x < Map.X_size; x++)
+            for (int x = 0; x < Map.XSize; x++)
             {
-                if (Cursore.X == x && Cursore.Y == y)
+                if (Player.X == x && Player.Y == y)
                 {
-                    Console.BackgroundColor = Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item2;
-                    Console.ForegroundColor = Element.Type_map.Types[(Type_decoder)Cursore.Element_type].Item2;
-                    Console.Write(Element.Type_map.Types[(Type_decoder)Cursore.Element_type].Item1);
+                    Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item2;
+                    Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)Player.ElementType].Item2;
+                    Console.Write(Element.TypeMap.Types[(TypeDecoder)Player.ElementType].Item1);
                 }
-                else if (Map.Units_map[x, y].Element_type != 500)
+                else if (Map.UnitsMap[x, y].ElementType != 0)
                 {
-                    Console.BackgroundColor = Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item2;
-                    Console.ForegroundColor = Element.Type_map.Types[(Type_decoder)Map.Units_map[x, y].Element_type].Item2;
-                    Console.Write(Element.Type_map.Types[(Type_decoder)Map.Units_map[x, y].Element_type].Item1);
+                    Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item2;
+                    Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)Map.UnitsMap[x, y].ElementType].Item2;
+                    Console.Write(Element.TypeMap.Types[(TypeDecoder)Map.UnitsMap[x, y].ElementType].Item1);
                 }
-                else if (Map.Terra[x, y].Element_type != 500)
+                else if (Map.Terra[x, y].ElementType != 0)
                 {
-                    Console.BackgroundColor = Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item2;
-                    Console.ForegroundColor = Element.Type_map.Types[(Type_decoder)Map.Terra[x, y].Element_type].Item2;
-                    Console.Write(Element.Type_map.Types[(Type_decoder)Map.Terra[x, y].Element_type].Item1);
+                    Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item2;
+                    Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)Map.Terra[x, y].ElementType].Item2;
+                    Console.Write(Element.TypeMap.Types[(TypeDecoder)Map.Terra[x, y].ElementType].Item1);
                 }
                 else
                 {
-                    if (Map.Countries_Land[x, y].Element_type == 500)
+                    if (Map.CountriesLand[x, y].ElementType == 0)
                     {
-                        Console.BackgroundColor = Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item2;
+                        Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item2;
                         Console.ForegroundColor = ConsoleColor.White;
-                        Console.Write(Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item1);
+                        Console.Write(Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item1);
                     }
                     else
                     {
-                        Console.BackgroundColor = Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item2;
-                        Console.ForegroundColor = Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item2;
-                        Console.Write(Element.Type_map.Types[(Type_decoder)Map.Countries_Land[x, y].Element_type].Item1);
+                        Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item2;
+                        Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item2;
+                        Console.Write(Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[x, y].ElementType].Item1);
                     }
                 }
-                if (x == Map.X_size - 1)
+                if (x == Map.XSize - 1)
                 {
                     
                     Console.WriteLine();
@@ -297,31 +297,31 @@ class Engine
 
     public Engine():this(30, 20, 2)
     { }
-    public Engine(int X, int Y, int Country_quantity)
+    public Engine(int X, int Y, int CountryQuantity)
     {
         this.player = new Cursor();
-        this.map = new World(X, Y, Country_quantity); 
+        this.map = new World(X, Y, CountryQuantity); 
 
 
     }
-    public void Player_Move()
+    public void PlayerMove()
     {
         bool finished = false;
         do
         {
-            Drawing.Draw_map(ref this.map, ref this.player);
-            finished = player_Input();
+            Drawing.DrawMap(ref this.map, ref this.player);
+            finished = playerInput();
         } while (!finished);
     }
 
-    private bool player_Input()
+    private bool playerInput()
     {
         ConsoleKey input = Console.ReadKey().Key;
         if ((input == ConsoleKey.UpArrow || input == ConsoleKey.W) && this.player.Y != 0)
         {
             this.player.Y -= 1;
         }
-        else if ((input == ConsoleKey.DownArrow || input == ConsoleKey.S) && this.player.Y != map.Y_size - 1)
+        else if ((input == ConsoleKey.DownArrow || input == ConsoleKey.S) && this.player.Y != map.YSize - 1)
         {
             this.player.Y += 1;
         }
@@ -329,7 +329,7 @@ class Engine
         {
             this.player.X -= 1;
         }
-        else if ((input == ConsoleKey.RightArrow || input == ConsoleKey.D) && this.player.X != map.X_size - 1)
+        else if ((input == ConsoleKey.RightArrow || input == ConsoleKey.D) && this.player.X != map.XSize - 1)
         {
             this.player.X += 1;
         }else if(input == ConsoleKey.Spacebar) { }
@@ -341,3 +341,4 @@ class Engine
         return false;
     }
 }
+
