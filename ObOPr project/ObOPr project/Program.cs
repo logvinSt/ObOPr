@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 
 Engine engine = new Engine();
-engine.PlayerMove();
+engine.Game();
 
 enum TypeDecoder
 {
@@ -19,7 +19,7 @@ enum TypeDecoder
     WATER = 202,
     MOUNTAINS = 203,
 
-    VOID_LAND = 0,
+    VOID = 0,
 
     PLAYER_LAND_1 = 701,
     PLAYER_LAND_2 = 702,
@@ -62,11 +62,11 @@ class Type
 
         Types.Add(TypeDecoder.MOUNTAINS, new Tuple<char, ConsoleColor>('M', ConsoleColor.DarkGreen));
 
-        Types.Add(TypeDecoder.VOID_LAND, new Tuple<char, ConsoleColor>('0', ConsoleColor.Black));
+        Types.Add(TypeDecoder.VOID, new Tuple<char, ConsoleColor>('0', ConsoleColor.Black));
 
-        Types.Add(TypeDecoder.PLAYER_LAND_1, new Tuple<char, ConsoleColor>('1', ConsoleColor.DarkBlue));
+        Types.Add(TypeDecoder.PLAYER_LAND_1, new Tuple<char, ConsoleColor>('1', ConsoleColor.DarkCyan));
         Types.Add(TypeDecoder.PLAYER_LAND_2, new Tuple<char, ConsoleColor>('2', ConsoleColor.DarkMagenta));
-        Types.Add(TypeDecoder.PLAYER_LAND_3, new Tuple<char, ConsoleColor>('3', ConsoleColor.DarkCyan));
+        Types.Add(TypeDecoder.PLAYER_LAND_3, new Tuple<char, ConsoleColor>('3', ConsoleColor.Cyan));
         Types.Add(TypeDecoder.PLAYER_LAND_4, new Tuple<char, ConsoleColor>('4', ConsoleColor.Magenta));
         Types.Add(TypeDecoder.PLAYER_LAND_5, new Tuple<char, ConsoleColor>('5', ConsoleColor.Red));
         Types.Add(TypeDecoder.PLAYER_LAND_6, new Tuple<char, ConsoleColor>('6', ConsoleColor.Yellow));
@@ -84,7 +84,7 @@ class Element
     
     public Element()
     {
-        ElementType = 0;
+        ElementType = (int)TypeDecoder.VOID;
     }
     public Element(int X, int Y)
     {
@@ -115,13 +115,203 @@ class Units : Element
     public int TheirCountry;
     public Units()
     {
-        ElementType = 0;
+        ElementType = (int)TypeDecoder.VOID;
     }
     public Units(ref Cursor coordinates, int power_value, int units_type, ref World map)
     {
+        switch (units_type) {
+            case (int)TypeDecoder.WARRIORS:
+                map.UnitsMap[coordinates.X, coordinates.Y] = new Warriors();
+                break;
+            case (int)TypeDecoder.SHIELDERS:
+                map.UnitsMap[coordinates.X, coordinates.Y] = new Shielders();
+                break;
+            case (int)TypeDecoder.ARCHERS:
+                map.UnitsMap[coordinates.X, coordinates.Y] = new Archers();
+                break;
+            case (int)TypeDecoder.SHIPS:
+                map.UnitsMap[coordinates.X, coordinates.Y] = new Ships();
+                break;
+
+        }
+
         map.UnitsMap[coordinates.X, coordinates.Y].Power = power_value;
         map.UnitsMap[coordinates.X, coordinates.Y].ElementType = units_type;
         map.UnitsMap[coordinates.X, coordinates.Y].TheirCountry = map.CountriesLand[coordinates.X, coordinates.Y].ElementType;
+    }
+    public virtual void Move(Cursor UsingUnit, Cursor  NowPoint, ref World map, int countryWichMove)
+    {
+        switch (map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType)
+        {
+            case (int)TypeDecoder.WARRIORS:
+                map.UnitsMap[NowPoint.X, NowPoint.Y] = new Warriors();
+                break;
+            case (int)TypeDecoder.SHIELDERS:
+                map.UnitsMap[NowPoint.X, NowPoint.Y] = new Shielders();
+                break;
+            case (int)TypeDecoder.ARCHERS:
+                map.UnitsMap[NowPoint.X, NowPoint.Y] = new Archers();
+                break;
+            case (int)TypeDecoder.SHIPS:
+                map.UnitsMap[NowPoint.X, NowPoint.Y] = new Ships();
+                break;
+
+        }
+
+        if (map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType != map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry)
+        {
+            map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Income += 10;
+        }
+
+        map.UnitsMap[NowPoint.X, NowPoint.Y].Power = map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power;
+        map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType;
+        map.UnitsMap[NowPoint.X, NowPoint.Y].TheirCountry = map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry;
+        map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType = map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry;
+        map.UnitsMap[NowPoint.X, NowPoint.Y].Charge = false;
+
+        map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType = (int)TypeDecoder.VOID;
+    }
+}
+
+class Warriors : Units
+{
+    public override void Move(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
+    {
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VOID && map.Terra[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
+        {
+            base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+        else if(map.Terra[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
+        {
+            this.Attack(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+    }
+    private void Attack(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
+    {
+
+        int newPower;
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.ARCHERS)
+        {
+            newPower = map.UnitsMap[NowPoint.X, NowPoint.Y].Power - map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power * 2;
+            map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power -= map.UnitsMap[NowPoint.X, NowPoint.Y].Power / 2;
+            map.UnitsMap[NowPoint.X, NowPoint.Y].Power = newPower;
+
+        }
+        else
+        {
+            newPower = map.UnitsMap[NowPoint.X, NowPoint.Y].Power - map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power * 2;
+            map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power -= map.UnitsMap[NowPoint.X, NowPoint.Y].Power;
+            map.UnitsMap[NowPoint.X, NowPoint.Y].Power = newPower;
+        }
+        if (map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power <= 0)
+        {
+            map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType = (int)TypeDecoder.VOID;
+        }
+        if(map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
+        {
+            map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
+            base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+
+        this.Charge = false;
+    }
+}
+class Shielders : Units
+{
+    public override void Move(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
+    {
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VOID && map.Terra[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
+        {
+            base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+        else if (map.Terra[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
+        {
+            this.Attack(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+    }
+    private void Attack(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
+    {
+
+        int newPower;
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.ARCHERS)
+        {
+            newPower = map.UnitsMap[NowPoint.X, NowPoint.Y].Power - map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power;
+            map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power -= map.UnitsMap[NowPoint.X, NowPoint.Y].Power / 4;
+            map.UnitsMap[NowPoint.X, NowPoint.Y].Power = newPower;
+
+        }
+        else
+        {
+            newPower = map.UnitsMap[NowPoint.X, NowPoint.Y].Power - map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power;
+            map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power -= map.UnitsMap[NowPoint.X, NowPoint.Y].Power / 2;
+            map.UnitsMap[NowPoint.X, NowPoint.Y].Power = newPower;
+        }
+        if (map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power <= 0)
+        {
+            map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType = (int)TypeDecoder.VOID;
+        }
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
+        {
+            map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
+            base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+
+        this.Charge = false;
+    }
+}
+class Archers : Units
+{
+    public override void Move(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
+    {
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VOID && map.Terra[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
+        {
+            base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+        else if (Math.Abs(NowPoint.X - UsingUnit.X) < 3 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 3 && this.Charge)
+        {
+            this.Attack(UsingUnit, NowPoint, ref map);
+        }
+    }
+    private void Attack(Cursor UsingUnit, Cursor NowPoint, ref World map)
+    {
+        if(map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.SHIELDERS)
+        {
+            map.UnitsMap[NowPoint.X, NowPoint.Y].Power -= map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power / 2;
+        }
+        else
+        {
+            map.UnitsMap[NowPoint.X, NowPoint.Y].Power -= map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power * 2;
+        }
+
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
+        {
+            map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
+        }
+        this.Charge = false;
+    }
+}
+class Ships : Units
+{
+    public override void Move(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
+    {
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VOID && map.Terra[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
+        {
+            base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
+        }
+        else if (Math.Abs(NowPoint.X - UsingUnit.X) < 3 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 3 && this.Charge)
+        {
+            this.Attack(UsingUnit, NowPoint, ref map);
+        }
+    }
+    private void Attack(Cursor UsingUnit, Cursor NowPoint, ref World map)
+    {
+        map.UnitsMap[NowPoint.X, NowPoint.Y].Power -= map.UnitsMap[UsingUnit.X, UsingUnit.Y].Power * 2;
+
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
+        {
+            map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
+        }
+        this.Charge = false;
     }
 }
 
@@ -133,7 +323,7 @@ class Country
     public Country()
     {
         this.Money = 100;
-        this.Income = 80;
+        this.Income = 90;
         this.NumberCastles = 1;
     }
 }
@@ -146,33 +336,39 @@ class Cursor : Element
         this.X = 0;
         this.Y = 0;
     }
+    public Cursor(int x, int y)
+    {
+        this.ElementType = 1;
+        this.X = x;
+        this.Y = y;
+    }
 }
 
 class TerraPoint : Element
 {
     public TerraPoint()
     {
-        this.ElementType = 0;
+        this.ElementType = (int)TypeDecoder.VOID;
     }
-    public TerraPoint(int x_start, int y_start, int x_size, int y_size, int spawning_change, int terra_type, ref TerraPoint[,] map)
+    public TerraPoint(int x_start, int y_start, int x_size, int y_size, int spawning_change, int terra_type, ref TerraPoint[,] map, ref Element[,] country)
     {
         map[x_start, y_start].ElementType = terra_type;
         Random rundom = new Random();
-        if(x_start > 0 && map[x_start - 1, y_start].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
+        if(x_start > 0 && map[x_start - 1, y_start].ElementType == (int)TypeDecoder.VOID && country[x_start - 1, y_start].ElementType == (int)TypeDecoder.VOID && rundom.Next(0, 99) < spawning_change)
         {
-            new TerraPoint(x_start - 1, y_start, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start - 1, y_start, x_size, y_size, spawning_change, terra_type, ref map, ref country);
         }
-        if (y_start > 0 && map[x_start, y_start - 1].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
+        if (y_start > 0 && map[x_start, y_start - 1].ElementType == (int)TypeDecoder.VOID && country[x_start, y_start - 1].ElementType == (int)TypeDecoder.VOID && rundom.Next(0, 99) < spawning_change)
         {
-            new TerraPoint(x_start, y_start - 1, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start, y_start - 1, x_size, y_size, spawning_change, terra_type, ref map, ref country);
         }
-        if (y_start < y_size - 1 && map[x_start, y_start + 1].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
+        if (y_start < y_size - 1 && map[x_start, y_start + 1].ElementType == (int)TypeDecoder.VOID && country[x_start, y_start + 1].ElementType == (int)TypeDecoder.VOID && rundom.Next(0, 99) < spawning_change)
         {
-            new TerraPoint(x_start, y_start + 1, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start, y_start + 1, x_size, y_size, spawning_change, terra_type, ref map, ref country);
         }
-        if (x_start < x_size - 1 && map[x_start + 1, y_start].ElementType == 0 && rundom.Next(0, 99) < spawning_change)
+        if (x_start < x_size - 1 && map[x_start + 1, y_start].ElementType == (int)TypeDecoder.VOID && country[x_start + 1, y_start].ElementType == (int)TypeDecoder.VOID && rundom.Next(0, 99) < spawning_change)
         {
-            new TerraPoint(x_start + 1, y_start, x_size, y_size, spawning_change, terra_type, ref map);
+            new TerraPoint(x_start + 1, y_start, x_size, y_size, spawning_change, terra_type, ref map, ref country);
         }
     }
 }
@@ -238,16 +434,21 @@ class World
             }
             if (spawned)
             {
+                Castles.Add(new Element(XRandom, YRandom));
                 Countries[spawnedCountries - 1] = new Country();
                 UnitsMap[XRandom, YRandom].ElementType = (int)TypeDecoder.CASTLE;
+                UnitsMap[XRandom, YRandom].Power = 1000;
                 for (int i = 0; i < 3; i++)
                 {
                     for (int j = 0; j < 3; j++)
                     {
                         this.CountriesLand[XRandom - 1 + i, YRandom - 1 + j].ElementType = spawnedCountries + 700;
-                        this.Terra[XRandom - 1 + i, YRandom - 1 + j].ElementType = spawnedCountries + 700;
                     }
                 }
+            }
+            else
+            {
+                spawnedCountries--;
             }
         }
     }
@@ -267,10 +468,10 @@ class World
                 YRandom = randomCoordinates.Next(0, YSize);
                 spawnTries++;
             }
-            while (this.Terra[XRandom, YRandom].ElementType != 0 && spawnTries < 10000);
+            while (this.Terra[XRandom, YRandom].ElementType != (int)TypeDecoder.VOID && this.CountriesLand[XRandom, YRandom].ElementType == (int)TypeDecoder.VOID && spawnTries < 10000);
             if (spawnTries < 10000)
             {
-                TerraPoint Spawn_terra_type = new TerraPoint(XRandom, YRandom, XSize, YSize, SpawnChange, TerraType, ref this.Terra);
+                TerraPoint Spawn_terra_type = new TerraPoint(XRandom, YRandom, XSize, YSize, SpawnChange, TerraType, ref this.Terra, ref this.CountriesLand);
             }
         }
     }
@@ -278,10 +479,21 @@ class World
 
 class Drawing
 {
-    public static void DrawMap(ref World Map, ref Cursor Player)
+    public static void DrawMap(ref World Map, ref Cursor Player, Cursor playerSecondCursor, int CountryNowMove)
     {
         Console.Clear();
-        for(int y = 0; y < Map.YSize; y++)
+        Console.Write("Now move: ");
+        Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)CountryNowMove].Item2;
+        Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)CountryNowMove].Item2;
+        Console.WriteLine(Element.TypeMap.Types[(TypeDecoder)CountryNowMove].Item1);
+
+        Console.BackgroundColor = ConsoleColor.Black;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write("Money: ");
+        Console.WriteLine(Map.Countries[CountryNowMove - (int)TypeDecoder.PLAYER_LAND_1].Money);
+        Console.Write("Income money: ");
+        Console.WriteLine(Map.Countries[CountryNowMove - (int)TypeDecoder.PLAYER_LAND_1].Income);
+        for (int y = 0; y < Map.YSize; y++)
         {
             for (int x = 0; x < Map.XSize; x++)
             {
@@ -325,6 +537,64 @@ class Drawing
                 }
             }
         }
+        Console.BackgroundColor = ConsoleColor.Black;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine("Now you choose:");
+        Console.Write("Type of units: ");
+        Console.WriteLine((TypeDecoder)Map.UnitsMap[Player.X, Player.Y].ElementType);
+        if((TypeDecoder)Map.UnitsMap[Player.X, Player.Y].ElementType != TypeDecoder.VOID)
+        {
+            Console.Write("Power of units: ");
+            Console.WriteLine(Map.UnitsMap[Player.X, Player.Y].Power);
+            if(Map.UnitsMap[Player.X, Player.Y].Charge)
+            {
+                Console.WriteLine("Units is ready to do something");
+            }
+            else
+            {
+                Console.WriteLine("Units isn't ready to do something");
+            }
+        }
+        Console.Write("Country: ");
+        Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[Player.X, Player.Y].ElementType].Item2;
+        Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[Player.X, Player.Y].ElementType].Item2;
+        Console.WriteLine(Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[Player.X, Player.Y].ElementType].Item1);
+        Console.BackgroundColor = ConsoleColor.Black;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write("Type of terra: ");
+        Console.WriteLine((TypeDecoder)Map.Terra[Player.X, Player.Y].ElementType);
+
+        Console.WriteLine();
+
+        if (playerSecondCursor.X != -1)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine("You selected:");
+            Console.Write("Type of units: ");
+            Console.WriteLine((TypeDecoder)Map.UnitsMap[playerSecondCursor.X, playerSecondCursor.Y].ElementType);
+            if ((TypeDecoder)Map.UnitsMap[playerSecondCursor.X, playerSecondCursor.Y].ElementType != TypeDecoder.VOID)
+            {
+                Console.Write("Power of units: ");
+                Console.WriteLine(Map.UnitsMap[playerSecondCursor.X, playerSecondCursor.Y].Power);
+                if (Map.UnitsMap[playerSecondCursor.X, playerSecondCursor.Y].Charge)
+                {
+                    Console.WriteLine("Units is ready to do something");
+                }
+                else
+                {
+                    Console.WriteLine("Units isn't ready to do something");
+                }
+            }
+            Console.Write("Country: ");
+            Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[playerSecondCursor.X, playerSecondCursor.Y].ElementType].Item2;
+            Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[playerSecondCursor.X, playerSecondCursor.Y].ElementType].Item2;
+            Console.WriteLine(Element.TypeMap.Types[(TypeDecoder)Map.CountriesLand[playerSecondCursor.X, playerSecondCursor.Y].ElementType].Item1);
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Type of terra: ");
+            Console.WriteLine((TypeDecoder)Map.Terra[playerSecondCursor.X, playerSecondCursor.Y].ElementType);
+        }
     }
 
     public static void DrawStore(Cursor Player)
@@ -361,8 +631,9 @@ class Engine
     public World Map;
     public UnitsStore Store;
     private Cursor player;
-    private Cursor playerInStore;
+    private Cursor playerSecondCursor;
     private int countryWichMove;
+
 
     public Engine():this(30, 20, 2)
     { }
@@ -371,10 +642,52 @@ class Engine
         this.player = new Cursor();
         this.Map = new World(X, Y, CountryQuantity);
         this.Store = new UnitsStore();
+        playerSecondCursor = new Cursor(-1, 0);
 
         countryWichMove = (int)TypeDecoder.PLAYER_LAND_1;
     }
-    public void PlayerMove()
+    public void Game()
+    {
+        bool finishGame = false;
+        int liveCountry, numberOfLiveCountry;
+        while (!finishGame)
+        {
+            liveCountry = 0;
+            for (int i = 0; i < Map.Countries.Length; i++)
+            {
+                if (Map.Countries[i].NumberCastles > 0)
+                {
+                    liveCountry++;
+                    numberOfLiveCountry = i;
+                }
+            }
+            if (liveCountry == 1)
+            {
+                finishGame = true;
+            }
+            else
+            {
+                this.PlayerMove();
+            }
+
+            Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money += Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Income;
+
+            liveCountry = 0;
+            int startCountry = countryWichMove;
+            while (liveCountry == 0 && countryWichMove + 1 != startCountry) {
+                countryWichMove++;
+                if (countryWichMove - (int)TypeDecoder.PLAYER_LAND_1 >= Map.Countries.Length)
+                {
+                    countryWichMove = (int)TypeDecoder.PLAYER_LAND_1;
+                }
+                if (Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].NumberCastles > 0)
+                {
+                    liveCountry++;
+                }
+            } 
+        }
+    }
+    private void PlayerMove()
     {
         bool storeOpen = false;
         bool finished = false;
@@ -382,12 +695,12 @@ class Engine
         {
             if (storeOpen)
             {
-                Drawing.DrawMap(ref this.Map, ref this.playerInStore);
+                Drawing.DrawMap(ref this.Map, ref this.playerSecondCursor, new Cursor(-1, 0), countryWichMove);
                 Drawing.DrawStore(this.player);
             }
             else
             {
-                Drawing.DrawMap(ref this.Map, ref this.player);
+                Drawing.DrawMap(ref this.Map, ref this.player, playerSecondCursor, countryWichMove);
             }
             finished = playerInput(ref storeOpen);
         } while (!finished);
@@ -429,13 +742,15 @@ class Engine
             if (!storeOpen)
             {
                 storeOpen = true;
-                playerInStore = player;
+                playerSecondCursor = player;
                 player = new Cursor();
             }
             else
             {
                 storeOpen = false;
-                player = playerInStore;
+                this.player.X = playerSecondCursor.X;
+                this.player.Y = playerSecondCursor.Y;
+                playerSecondCursor.X = -1;
             }
         }
         else if (input == ConsoleKey.Enter)
@@ -444,15 +759,24 @@ class Engine
             {
                 Store.UnitWichBuy = player.X + (int)TypeDecoder.CASTLE;
                 storeOpen = false;
-                player = playerInStore;
+                this.player.X = playerSecondCursor.X;
+                this.player.Y = playerSecondCursor.Y;
+                playerSecondCursor.X = -1;
             }
-            else if(Store.UnitWichBuy != 0)
+            else if (Store.UnitWichBuy != 0)
             {
                 BuyUnits();
                 Store.UnitWichBuy = 0;
-            }else if(Map.UnitsMap[player.X, player.Y].ElementType >= (int)TypeDecoder.WARRIORS && Map.UnitsMap[player.X, player.Y].ElementType <= (int)TypeDecoder.SHIPS)
+            }
+            else if (Map.UnitsMap[player.X, player.Y].ElementType >= (int)TypeDecoder.WARRIORS && Map.UnitsMap[player.X, player.Y].ElementType <= (int)TypeDecoder.SHIPS && Map.UnitsMap[player.X, player.Y].TheirCountry == countryWichMove && playerSecondCursor.X == -1)
             {
-
+                playerSecondCursor.X = player.X;
+                playerSecondCursor.Y = player.Y;
+            }
+            else if(playerSecondCursor.X != -1)
+            {
+                Map.UnitsMap[playerSecondCursor.X, playerSecondCursor.Y].Move(playerSecondCursor, player, ref Map, countryWichMove);
+                playerSecondCursor.X = -1;
             }
         }
         else if(input == ConsoleKey.Escape || input == ConsoleKey.Backspace)
@@ -460,7 +784,9 @@ class Engine
             if (storeOpen)
             {
                 storeOpen = false;
-                player = playerInStore;
+                this.player.X = playerSecondCursor.X;
+                this.player.Y = playerSecondCursor.Y;
+                playerSecondCursor.X = -1;
             }
             return true;
         }
@@ -470,7 +796,68 @@ class Engine
     {
         if (Map.UnitsMap[player.X, player.Y].ElementType == 0 && Map.CountriesLand[player.X, player.Y].ElementType == countryWichMove)
         {
-            new Units(ref player, 1, Store.UnitWichBuy, ref Map);
+            int wantedPower;
+            wantedPower = WantedPowerOfUnits();
+            if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money)
+            {
+                new Units(ref player, wantedPower, Store.UnitWichBuy, ref Map);
+                Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= wantedPower / 10;
+            }
         }
+    }
+
+    private int WantedPowerOfUnits()
+    {
+        int wantedPower = 0;
+        bool sended = false;
+        while (!sended) {
+            Console.Clear();
+            Console.WriteLine("How much power do you want? You can buy only in dozens!");
+            Console.WriteLine(wantedPower);
+            Console.Write("How you need money:");
+            Console.WriteLine(wantedPower/10);
+            ConsoleKey input = Console.ReadKey().Key;
+            switch (input)
+            {
+                case ConsoleKey.Enter:
+                    sended = true;
+                    break;
+                case ConsoleKey.Backspace:
+                    wantedPower = wantedPower / 10;
+                    break;
+                case ConsoleKey.D0:
+                    wantedPower = wantedPower * 10;
+                    break;
+                case ConsoleKey.D1:
+                    wantedPower = wantedPower * 10 + 1;
+                    break;
+                case ConsoleKey.D2:
+                    wantedPower = wantedPower * 10 + 2;
+                    break;
+                case ConsoleKey.D3:
+                    wantedPower = wantedPower * 10 + 3;
+                    break;
+                case ConsoleKey.D4:
+                    wantedPower = wantedPower * 10 + 4;
+                    break;
+                case ConsoleKey.D5:
+                    wantedPower = wantedPower * 10 + 5;
+                    break;
+                case ConsoleKey.D6:
+                    wantedPower = wantedPower * 10 + 6;
+                    break;
+                case ConsoleKey.D7:
+                    wantedPower = wantedPower * 10 + 7;
+                    break;
+                case ConsoleKey.D8:
+                    wantedPower = wantedPower * 10 + 8;
+                    break;
+                case ConsoleKey.D9:
+                    wantedPower = wantedPower * 10 + 9;
+                    break;
+            }
+        }
+        wantedPower -= wantedPower % 10; 
+        return wantedPower;
     }
 }
