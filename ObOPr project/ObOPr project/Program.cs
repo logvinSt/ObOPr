@@ -141,6 +141,23 @@ class Units : Element
         map.UnitsMap[coordinates.X, coordinates.Y].TheirCountry = map.CountriesLand[coordinates.X, coordinates.Y].ElementType;
         Charge = true;
     }
+
+    public static bool CanArchersAttack(Cursor UsingUnit, Cursor NowPoint, ref World map)
+    {
+        if(map.Terra[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.FOREST)
+        {
+            return false;
+        }
+        if (map.Terra[UsingUnit.X, UsingUnit.Y].ElementType == (int)TypeDecoder.MOUNTAINS && Math.Abs(NowPoint.X - UsingUnit.X) < 4 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 4)
+        {
+            return true;
+        }
+        else if(map.Terra[UsingUnit.X, UsingUnit.Y].ElementType != (int)TypeDecoder.FOREST && Math.Abs(NowPoint.X - UsingUnit.X) < 3 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 3)
+        {
+            return true;
+        }
+        return false;
+    }
     public virtual void Move(Cursor UsingUnit, Cursor  NowPoint, ref World map, int countryWichMove)
     {
         switch (map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType)
@@ -300,11 +317,12 @@ class Archers : Units
 {
     public override void Move(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
     {
+        bool canAttack = Units.CanArchersAttack(UsingUnit, NowPoint, ref map);
         if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VOID && map.Terra[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
         {
             base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
         }
-        else if (Math.Abs(NowPoint.X - UsingUnit.X) < 3 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 3 && this.Charge)
+        else if (canAttack && this.Charge)
         {
             this.Attack(UsingUnit, NowPoint, ref map);
         }
@@ -340,11 +358,12 @@ class Ships : Units
 {
     public override void Move(Cursor UsingUnit, Cursor NowPoint, ref World map, int countryWichMove)
     {
+        bool canAttack = Units.CanArchersAttack(UsingUnit, NowPoint, ref map);
         if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VOID && map.Terra[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.WATER && Math.Abs(NowPoint.X - UsingUnit.X) < 2 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 2 && this.Charge)
         {
             base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
         }
-        else if (Math.Abs(NowPoint.X - UsingUnit.X) < 3 && Math.Abs(NowPoint.Y - UsingUnit.Y) < 3 && this.Charge)
+        else if (canAttack && this.Charge)
         {
             this.Attack(UsingUnit, NowPoint, ref map);
         }
@@ -720,9 +739,9 @@ class Engine
                     numberOfLiveCountry = i;
                 }
             }
-            if (liveCountry == 1)
+            if (liveCountry <= 1)
             {
-                finishGame = true;
+                break;
             }
             else
             {
@@ -733,7 +752,8 @@ class Engine
 
             liveCountry = 0;
             int startCountry = countryWichMove;
-            while (liveCountry == 0 && countryWichMove + 1 != startCountry) {
+            do
+            {
                 countryWichMove++;
                 if (countryWichMove - (int)TypeDecoder.PLAYER_LAND_1 >= Map.Countries.Length)
                 {
@@ -744,6 +764,7 @@ class Engine
                     liveCountry++;
                 }
             }
+            while (liveCountry == 0 && countryWichMove != startCountry);
             for(int i = 0; i < Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Count(); i++)
             {
                 Map.UnitsMap[Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0][i].X, Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0][i].Y].Charge = true;
@@ -752,6 +773,14 @@ class Engine
             Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1] = new List<Element>();
 
         }
+
+        Console.Clear();
+        Console.Write("The winer is ");
+        Console.BackgroundColor = Element.TypeMap.Types[(TypeDecoder)countryWichMove].Item2;
+        Console.ForegroundColor = Element.TypeMap.Types[(TypeDecoder)countryWichMove].Item2;
+        Console.Write(Element.TypeMap.Types[(TypeDecoder)countryWichMove].Item1);
+        Console.WriteLine();
+
     }
     private void PlayerMove()
     {
@@ -995,3 +1024,4 @@ class Engine
         return wantedPower;
     }
 }
+
