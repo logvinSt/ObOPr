@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -138,6 +139,7 @@ class Units : Element
         map.UnitsMap[coordinates.X, coordinates.Y].Power = power_value;
         map.UnitsMap[coordinates.X, coordinates.Y].ElementType = units_type;
         map.UnitsMap[coordinates.X, coordinates.Y].TheirCountry = map.CountriesLand[coordinates.X, coordinates.Y].ElementType;
+        Charge = true;
     }
     public virtual void Move(Cursor UsingUnit, Cursor  NowPoint, ref World map, int countryWichMove)
     {
@@ -158,6 +160,10 @@ class Units : Element
 
         }
 
+        if (map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType != (int)TypeDecoder.VOID)
+        {
+            map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Income -= 10;
+        }
         if (map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType != map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry)
         {
             map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Income += 10;
@@ -168,6 +174,15 @@ class Units : Element
         map.UnitsMap[NowPoint.X, NowPoint.Y].TheirCountry = map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry;
         map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType = map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry;
         map.UnitsMap[NowPoint.X, NowPoint.Y].Charge = false;
+
+        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.MOUNTAINS)
+        {    
+            map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1].Add(new Element(NowPoint.X, NowPoint.Y));
+        }
+        else
+        {
+            map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Add(new Element(NowPoint.X, NowPoint.Y));
+        }
 
         map.UnitsMap[UsingUnit.X, UsingUnit.Y].ElementType = (int)TypeDecoder.VOID;
     }
@@ -209,11 +224,22 @@ class Warriors : Units
         }
         if(map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
         {
+            if(map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.CASTLE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].NumberCastles--;
+            }
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VILLAGE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Income -= 10;
+            }
             map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
             base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
         }
-
-        this.Charge = false;
+        else
+        {
+            this.Charge = false;
+            map.Countries[map.CountriesLand[UsingUnit.X, UsingUnit.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Add(new Element(NowPoint.X, NowPoint.Y));
+        }
     }
 }
 class Shielders : Units
@@ -252,11 +278,22 @@ class Shielders : Units
         }
         if (map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
         {
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.CASTLE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].NumberCastles--;
+            }
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VILLAGE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Income -= 10;
+            }
             map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
             base.Move(UsingUnit, NowPoint, ref map, countryWichMove);
         }
-
-        this.Charge = false;
+        else
+        {
+            this.Charge = false;
+            map.Countries[map.CountriesLand[UsingUnit.X, UsingUnit.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Add(new Element(NowPoint.X, NowPoint.Y));
+        }
     }
 }
 class Archers : Units
@@ -285,9 +322,18 @@ class Archers : Units
 
         if (map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
         {
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.CASTLE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].NumberCastles--;
+            }
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VILLAGE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Income -= 10;
+            }
             map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
         }
         this.Charge = false;
+        map.Countries[map.CountriesLand[UsingUnit.X, UsingUnit.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Add(new Element(NowPoint.X, NowPoint.Y));
     }
 }
 class Ships : Units
@@ -309,9 +355,18 @@ class Ships : Units
 
         if (map.UnitsMap[NowPoint.X, NowPoint.Y].Power <= 0)
         {
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.CASTLE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].NumberCastles--;
+            }
+            if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.VILLAGE)
+            {
+                map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Income -= 10;
+            }
             map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType = (int)TypeDecoder.VOID;
         }
         this.Charge = false;
+        map.Countries[map.CountriesLand[UsingUnit.X, UsingUnit.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Add(new Element(NowPoint.X, NowPoint.Y));
     }
 }
 
@@ -320,11 +375,15 @@ class Country
     public int Money;
     public int Income;
     public int NumberCastles;
+    public List<Element>[] Recharge;
     public Country()
     {
         this.Money = 100;
         this.Income = 90;
         this.NumberCastles = 1;
+        Recharge = new List<Element>[2];
+        Recharge[0] = new List<Element>();
+        Recharge[1] = new List<Element>();
     }
 }
 
@@ -684,7 +743,14 @@ class Engine
                 {
                     liveCountry++;
                 }
-            } 
+            }
+            for(int i = 0; i < Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Count(); i++)
+            {
+                Map.UnitsMap[Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0][i].X, Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0][i].Y].Charge = true;
+            }
+            Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0] = Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1];
+            Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1] = new List<Element>();
+
         }
     }
     private void PlayerMove()
@@ -796,12 +862,80 @@ class Engine
     {
         if (Map.UnitsMap[player.X, player.Y].ElementType == 0 && Map.CountriesLand[player.X, player.Y].ElementType == countryWichMove)
         {
-            int wantedPower;
-            wantedPower = WantedPowerOfUnits();
-            if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money)
+            if (Store.UnitWichBuy == (int)TypeDecoder.CASTLE && Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money >= 50)
             {
-                new Units(ref player, wantedPower, Store.UnitWichBuy, ref Map);
-                Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= wantedPower / 10;
+                bool spawned = false;
+                for (int i = -1; i < 2; i++)
+                {
+                    for (int j = -1; j < 2; j++)
+                    {
+                        if(Map.XSize > player.X + i && player.X + i >= 0 && Map.YSize > player.Y + j && player.Y + j >= 0 && Map.UnitsMap[player.X + i, player.Y + j].Power >= 1000)
+                        {
+                            spawned = true;
+                        }
+                    }
+                }
+                if (spawned)
+                {
+                    new Units(ref player, 1000, Store.UnitWichBuy, ref Map);
+                    Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= 50;
+                }
+            }
+            else if (Store.UnitWichBuy == (int)TypeDecoder.PORT && Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money >= 25)
+            {
+                bool spawned = false;
+                for (int i = -1; i < 2; i++)
+                {
+                    for (int j = -1; j < 2; j++)
+                    {
+                        if (Map.XSize > player.X + i && player.X + i >= 0 && Map.YSize > player.Y + j && player.Y + j >= 0 && Map.UnitsMap[player.X + i, player.Y + j].Power >= 250)
+                        {
+                            spawned = true;
+                        }
+                    }
+                }
+                if (spawned)
+                {
+                    new Units(ref player, 250, Store.UnitWichBuy, ref Map);
+                    Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= 25;
+                }
+            }
+            else if (Store.UnitWichBuy == (int)TypeDecoder.VILLAGE && Map.Terra[player.X, player.Y].ElementType == (int)TypeDecoder.VOID && Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money >= 15)
+            {
+                new Units(ref player, 10, Store.UnitWichBuy, ref Map);
+                Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= 15;
+                Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Income += 10;
+            }
+            else if (Store.UnitWichBuy == (int)TypeDecoder.SHIPS && Map.Terra[player.X, player.Y].ElementType == (int)TypeDecoder.WATER)
+            {
+                bool spawned = false;
+                for (int i = -1; i < 2; i++)
+                {
+                    for (int j = -1; j < 2; j++)
+                    {
+                        if (Map.XSize > player.X + i && player.X + i >= 0 && Map.YSize > player.Y + j && player.Y + j >= 0 && Map.UnitsMap[player.X + i, player.Y + j].ElementType == (int)TypeDecoder.PORT)
+                        {
+                            spawned = true;
+                        }
+                    }
+                }
+                int wantedPower;
+                wantedPower = WantedPowerOfUnits();
+                if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money && spawned)
+                {
+                    new Units(ref player, wantedPower, Store.UnitWichBuy, ref Map);
+                    Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= wantedPower / 10;
+                }
+            }
+            else
+            {
+                int wantedPower;
+                wantedPower = WantedPowerOfUnits();
+                if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money)
+                {
+                    new Units(ref player, wantedPower, Store.UnitWichBuy, ref Map);
+                    Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= wantedPower / 10;
+                }
             }
         }
     }
