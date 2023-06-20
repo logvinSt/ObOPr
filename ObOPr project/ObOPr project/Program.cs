@@ -192,7 +192,7 @@ class Units : Element
         map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType = map.UnitsMap[UsingUnit.X, UsingUnit.Y].TheirCountry;
         map.UnitsMap[NowPoint.X, NowPoint.Y].Charge = false;
 
-        if (map.UnitsMap[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.MOUNTAINS)
+        if (map.Terra[NowPoint.X, NowPoint.Y].ElementType == (int)TypeDecoder.MOUNTAINS)
         {    
             map.Countries[map.CountriesLand[NowPoint.X, NowPoint.Y].ElementType - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1].Add(new Element(NowPoint.X, NowPoint.Y));
         }
@@ -704,6 +704,29 @@ class Drawing
     }
 }
 
+/*class Menu
+{
+    public void Game()
+    {
+        bool exit = false;
+        ConsoleKey input;
+        do
+        {
+            input = Console.ReadKey().Key;
+            if (input == ConsoleKey.Escape)
+            {
+                exit = true;
+
+            }
+            while
+        }
+        while (!exit);
+        int X;
+        int Y;
+        int CountryQuantity;
+
+    }
+}*/
 class Engine
 {
     public World Map;
@@ -769,8 +792,13 @@ class Engine
             {
                 Map.UnitsMap[Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0][i].X, Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0][i].Y].Charge = true;
             }
-            Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0] = Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1];
+            Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0] = new List<Element>();
+            for (int i = 0; i < Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1].Count(); i++)
+            {
+                Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[0].Add(new Element(Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1][i].X, Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1][i].Y));
+            }
             Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Recharge[1] = new List<Element>();
+
 
         }
 
@@ -889,7 +917,7 @@ class Engine
     }
     private void BuyUnits()
     {
-        if (Map.UnitsMap[player.X, player.Y].ElementType == 0 && Map.CountriesLand[player.X, player.Y].ElementType == countryWichMove)
+        if (Map.UnitsMap[player.X, player.Y].ElementType == (int)TypeDecoder.VOID && Map.CountriesLand[player.X, player.Y].ElementType == countryWichMove)
         {
             if (Store.UnitWichBuy == (int)TypeDecoder.CASTLE && Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money >= 50)
             {
@@ -908,6 +936,7 @@ class Engine
                 {
                     new Units(ref player, 1000, Store.UnitWichBuy, ref Map);
                     Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= 50;
+                    Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].NumberCastles++;
                 }
             }
             else if (Store.UnitWichBuy == (int)TypeDecoder.PORT && Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money >= 25)
@@ -950,7 +979,7 @@ class Engine
                 }
                 int wantedPower;
                 wantedPower = WantedPowerOfUnits();
-                if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money && spawned)
+                if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money && spawned && wantedPower > 0)
                 {
                     new Units(ref player, wantedPower, Store.UnitWichBuy, ref Map);
                     Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= wantedPower / 10;
@@ -960,7 +989,7 @@ class Engine
             {
                 int wantedPower;
                 wantedPower = WantedPowerOfUnits();
-                if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money)
+                if (wantedPower / 10 <= Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money && wantedPower > 0)
                 {
                     new Units(ref player, wantedPower, Store.UnitWichBuy, ref Map);
                     Map.Countries[countryWichMove - (int)TypeDecoder.PLAYER_LAND_1].Money -= wantedPower / 10;
